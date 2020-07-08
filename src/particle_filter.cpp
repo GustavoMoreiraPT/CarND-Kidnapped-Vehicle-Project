@@ -131,6 +131,22 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
+   //First part: iterate over the particle and 
+   for(int i = 0; i < num_particles; i++){
+
+       vector<LandmarkObs> observed_landmarks;
+
+        //only keep landmarks within the maximum range of the sensor_range
+       for(auto landmark: map_landmarks.landmark_list){
+           if(dist(particles[i].x, particles[i].y, landmark.x_f, landmark.y_f) <= sensor_range){
+               observed_landmarks.push_back(LandmarkObs{ landmark.id_i, landmark.x_f, landmark.y_f });
+		   }
+       }
+
+
+   }
+  
+
 }
 
 void ParticleFilter::resample() {

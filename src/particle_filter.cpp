@@ -134,19 +134,28 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    //First part: iterate over the particle and 
    for(int i = 0; i < num_particles; i++){
 
-       vector<LandmarkObs> observed_landmarks;
+       vector<LandmarkObs> predicted_landmarks;
 
         //only keep landmarks within the maximum range of the sensor_range
        for(auto landmark: map_landmarks.landmark_list){
            if(dist(particles[i].x, particles[i].y, landmark.x_f, landmark.y_f) <= sensor_range){
-               observed_landmarks.push_back(LandmarkObs{ landmark.id_i, landmark.x_f, landmark.y_f });
+               predicted_landmarks.push_back(LandmarkObs{ landmark.id_i, landmark.x_f, landmark.y_f });
 		   }
        }
 
+       //transform observations from vehicle map coordinates to map coordinates
+       vector<LandmarksObs> transformed_observations;
+       for(auto observation: observations){
+        double transformed_x = cos(particles[i].theta) * observation.x - sin(particles[i].theta) * observation.y + particles[i].x;
+        double transformed_y = sin(particles[i].theta) * observation.x + cos(particles[i].theta) * observation.y + particles[i].y;
+        transformed_observations.push_back(LandmarkObs{observation.id, particles[i].x, particles[i].y});
+	   }
+
+       //include dataAssociation step on the current particle[i]
+       dataAssociation(predicted_landmarks, transformed_observations);
+
 
    }
-  
-
 }
 
 void ParticleFilter::resample() {

@@ -18,8 +18,7 @@
 
 #include "helper_functions.h"
 
-using std::string;
-using std::vector;
+using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**

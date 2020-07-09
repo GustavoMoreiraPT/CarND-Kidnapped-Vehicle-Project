@@ -18,8 +18,9 @@
 
 #include "helper_functions.h"
 
-using std::string;
-using std::vector;
+using namespace std;
+
+static default_random_engine gen;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**
@@ -144,11 +145,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
        }
 
        //transform observations from vehicle map coordinates to map coordinates
-       vector<LandmarksObs> transformed_observations;
+       vector<LandmarkObs> transformed_observations;
        for(auto observation: observations){
         double transformed_x = cos(particles[i].theta) * observation.x - sin(particles[i].theta) * observation.y + particles[i].x;
         double transformed_y = sin(particles[i].theta) * observation.x + cos(particles[i].theta) * observation.y + particles[i].y;
-        transformed_observations.push_back(LandmarkObs{observation.id, particles[i].x, particles[i].y});
+        transformed_observations.push_back(LandmarkObs{observation.id, transformed_x, transformed_y});
 	   }
 
        //include dataAssociation step on the current particle[i]
@@ -189,7 +190,7 @@ void ParticleFilter::resample() {
 
    discrete_distribution<int> distribution(this->weights.begin(), weights.end());
 
-   vector<Particle> resampled_particles:
+   vector<Particle> resampled_particles;
 
    for(int i = 0; i < num_particles; i++){
       int pick = distribution(gen);

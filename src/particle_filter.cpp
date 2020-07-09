@@ -131,6 +131,52 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
+   //First part: iterate over the particle and 
+   for(int i = 0; i < num_particles; i++){
+
+       vector<LandmarkObs> predicted_landmarks;
+
+        //only keep landmarks within the maximum range of the sensor_range
+       for(auto landmark: map_landmarks.landmark_list){
+           if(dist(particles[i].x, particles[i].y, landmark.x_f, landmark.y_f) <= sensor_range){
+               predicted_landmarks.push_back(LandmarkObs{ landmark.id_i, landmark.x_f, landmark.y_f });
+		   }
+       }
+
+       //transform observations from vehicle map coordinates to map coordinates
+       vector<LandmarksObs> transformed_observations;
+       for(auto observation: observations){
+        double transformed_x = cos(particles[i].theta) * observation.x - sin(particles[i].theta) * observation.y + particles[i].x;
+        double transformed_y = sin(particles[i].theta) * observation.x + cos(particles[i].theta) * observation.y + particles[i].y;
+        transformed_observations.push_back(LandmarkObs{observation.id, particles[i].x, particles[i].y});
+	   }
+
+       //include dataAssociation step on the current particle[i]
+       dataAssociation(predicted_landmarks, transformed_observations);
+
+       //for each iteration, reassign the weight to 1 because of previous resampling
+       particles[i].weight = 1.0;
+       for (auto transformed_observation : transformed_observations) {
+           double observed_x = transformed_observation.x;
+           double observed_y = transformed_observation.y;
+           int calculated_associated_prediction = transformed_observation.id;
+           double predicted_x;
+           double predicted_y;
+
+           //compare the predicted coordinates with the current observation
+           for (auto landmark : predicted_landmarks) {
+               if (landmark.id == calculated_associated_prediction) {
+                   predicted_x = landmark.x;
+                   predicted_y = landmark.y;
+               }
+           }
+
+           //apply multivariate gaussian formula to calculate the new weight
+           double new_weight = (1 / (2 * M_PI * std_landmark[0] * std_landmark[1])) * exp(-(pow(predicted_x - observed_x, 2) / (2 * pow(std_landmark[0], 2)) + (pow(predicted_y - observed_y, 2) / (2 * pow(std_landmark[1], 2)))));
+
+           particles[i].weight *= new_weight;
+       }
+   }
 }
 
 void ParticleFilter::resample() {

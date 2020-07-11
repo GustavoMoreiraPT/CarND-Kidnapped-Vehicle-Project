@@ -192,8 +192,13 @@ void ParticleFilter::resample() {
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
 
+   vector<double> p_weights;
+    for (int i = 0; i < particles.size(); i++) {
+        p_weights.push_back(particles[i].weight);
+    }
+
    default_random_engine gen2;
-   discrete_distribution<int> distribution(weights.begin(), weights.end());
+   discrete_distribution<int> distribution(p_weights.begin(), p_weights.end());
 
    vector<Particle> resampled_particles;
 
